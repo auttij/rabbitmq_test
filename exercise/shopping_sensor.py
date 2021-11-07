@@ -15,6 +15,7 @@ class ShoppingEventProducer:
 
     def initialize_rabbitmq(self):
         # To implement - Initialize the RabbitMq connection, channel, exchange and queue here
+        xprint("ShoppingEventProducer initialize_rabbitmq() called")
         
         self.connection = pika.BlockingConnection(
             pika.ConnectionParameters('localhost'))
@@ -24,19 +25,23 @@ class ShoppingEventProducer:
             exchange_type='x-consistent-hash', 
             durable=True)
         
-        for q in ["worker1_queue", "worker2_queue"]:
-            self.channel.queue_declare(queue=q, durable=True)
-            self.channel.queue_bind(exchange='shopping_events_exchange', queue=q, routing_key="1")
-        xprint("ShoppingEventProducer initialize_rabbitmq() called")
+        #for q in ["q1", "q2"]:
+        #    self.channel.queue_declare(queue=q, durable=True)
+        #    self.channel.queue_bind(exchange='shopping_events_exchange', queue=q, routing_key="1")
+#        self.channel.queue_declare(queue='shopping_events_dead_letter_queue', durable=True)
+#        self.channel.queue_bind(exchange='', queue='shopping_events_dead_letter_queue')
+
+            
+        xprint("ShoppingEventProducer initialize_rabbitmq() finished")
 
     def publish(self, shopping_event):
         xprint("ShoppingEventProducer: Publishing shopping event {}".format(vars(shopping_event)))
-        se = vars(shopping_event)
-        message = json.dumps(se)
+        message = json.dumps(vars(shopping_event))
         self.channel.basic_publish(
             exchange='shopping_events_exchange', 
-            routing_key=str(se['product_number']), 
+            routing_key=str(shopping_event.product_number), 
             body=message)
+        xprint("ShoppingEventProducer: finished publishing shopping event")
         # To implement - publish a message to the Rabbitmq here
         # Use json.dumps(vars(shopping_event)) to convert the shopping_event object to JSON
 
