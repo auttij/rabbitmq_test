@@ -24,7 +24,7 @@ class ShoppingEventProducer:
             exchange_type='x-consistent-hash', 
             durable=True)
         
-        for q in ["worker_queue1", "worker_queue2"]:
+        for q in ["worker1_queue", "worker2_queue"]:
             self.channel.queue_declare(queue=q, durable=True)
             self.channel.queue_bind(exchange='shopping_events_exchange', queue=q, routing_key="1")
         xprint("ShoppingEventProducer initialize_rabbitmq() called")
