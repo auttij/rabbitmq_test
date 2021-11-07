@@ -66,7 +66,7 @@ class ShoppingWorker:
                                     shopping_event.product_number,
                                     self.shopping_state[shopping_event.product_number],
                                     shopping_event.timestamp,
-                                    str( (cost_per_unit * number_of_units) * 0.8) )
+                                    (cost_per_unit * number_of_units) * 0.8)
                 self.shopping_state.pop(shopping_event.product_number)
                 self.customer_app_event_producer.publish_shopping_event(customer_id, shopping_event)
                 self.customer_app_event_producer.publish_billing_event(billing_event)
