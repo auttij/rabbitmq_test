@@ -1,7 +1,9 @@
 version: "3"
 services:
- rabbitmq:
-    image: "rabbitmq:management"
+  rabbitmq:
+    container_name: "some-rabbit"
+    image: "rabbitmq:shopping"
+    build: .
     ports:
       - "5672:5672"
       - "15672:15672"
