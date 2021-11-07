@@ -37,7 +37,7 @@ class CustomerEventConsumer:
         # To implement - This is the callback that is passed to "on_message_callback" when a message is received
         event = json.loads(body.decode())
         if 'event_type' in event:
-            shopping_event = ProductEvent(event['even_type'], event['product_number'], event['timestamp'])
+            shopping_event = ProductEvent(event['event_type'], event['product_number'], event['timestamp'])
             self.shopping_events.append(shopping_event)
         else:
             billing_event = BillingEvent(event['customer_id'], event['product_number'], event['pickup_time'], event['purchase_time'], event['shopping_cost'])
