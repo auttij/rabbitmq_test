@@ -23,6 +23,7 @@ class ShoppingWorker:
         self.customer_app_event_producer = None
 
     def initialize_rabbitmq(self):
+        xprint("ShoppingWorker {} - queue {} - initialize_rabbitmq() called".format(self.worker_id, self.queue))
         # To implement - Initialize the RabbitMQ connection, channel, exchange and queue here
         # Also initialize the channels for the billing_event_producer and customer_app_event_producer
         self.connection = pika.BlockingConnection(
@@ -40,7 +41,7 @@ class ShoppingWorker:
 
         self.billing_event_producer = BillingEventProducer(self.connection, self.worker_id)
         self.customer_app_event_producer = CustomerEventProducer(self.connection, self.worker_id)
-        xprint("ShoppingWorker {}: initialize_rabbitmq() called".format(self.worker_id))
+        xprint("ShoppingWorker initialize_rabbitmq() finished")
 
     def handle_shopping_event(self, ch, method, properties, body):
         # To implement - This is the callback that is passed to "on_message_callback" when a message is received
@@ -60,20 +61,22 @@ class ShoppingWorker:
                 xprint("Shopping event processed, shopping event sent")
 
             elif shopping_event.event_type == 'purchase':
+                self.shopping_events.append(shopping_event)
                 billing_event = BillingEvent(customer_id, 
                                     shopping_event.product_number,
-                                    self.shopping_events[shopping_event.product_number],
+                                    self.shopping_state[shopping_event.product_number],
                                     shopping_event.timestamp,
-                                    (cost_per_unit * number_of_units) * 0.8)
+                                    str( (cost_per_unit * number_of_units) * 0.8) )
                 self.shopping_state.pop(shopping_event.product_number)
                 self.customer_app_event_producer.publish_billing_event(billing_event)
                 self.billing_event_producer.publish(billing_event)
                 xprint("Shopping event processed, Billing events sent")
-        xprint(shopping_event.product_number + " " + shopping_event.timestamp)
-        self.channel.basic_ack(delivery_tag=method.delivery_tag)
+
+            self.channel.basic_ack(delivery_tag=method.delivery_tag)
 
     # Utility function to get the customer_id from a shopping event
     def get_customer_id_from_shopping_event(self, shopping_event):
+        
         customer_id = [customer_id for customer_id, product_number in customers_database.items()
                         if shopping_event.product_number == product_number]
         if len(customer_id) == 0:
@@ -119,7 +122,7 @@ class BillingEventProducer:
         xprint("BillingEventProducer {}: initialize_rabbitmq() called".format(self.worker_id))
 
     def publish(self, billing_event):
-        self.channel.basic_publish(exchange='', queue='billing_events', body=json.dumps(vars(billing_event)))
+        self.channel.basic_publish(exchange='', routing_key='billing_events', body=json.dumps(vars(billing_event)))
         xprint("BillingEventProducer {}: Publishing billing event {}".format(
             self.worker_id,
             vars(billing_event)))
