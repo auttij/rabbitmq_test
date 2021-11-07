@@ -1,2 +1,3 @@
 test/
 exercise/env/
+*/__pycache__/
