@@ -34,7 +34,7 @@ class ShoppingWorker:
             exchange_type='x-consistent-hash', 
             durable=True)
         self.channel.queue_declare(queue=self.queue, durable=True)
-        self.channel.queue_bind(exchange='shopping_events_exchange', queue=self.queue,  routing_key=self.weight)
+        self.channel.queue_bind(exchange='shopping_events_exchange', queue=self.queue, routing_key=self.weight)
         
 #        self.channel.queue_declare(queue='shopping_events_dead_letter_queue', durable=True)
 #        self.channel.queue_bind(exchange='', queue='shopping_events_dead_letter_queue')
@@ -68,6 +68,7 @@ class ShoppingWorker:
                                     shopping_event.timestamp,
                                     str( (cost_per_unit * number_of_units) * 0.8) )
                 self.shopping_state.pop(shopping_event.product_number)
+                self.customer_app_event_producer.publish_shopping_event(customer_id, shopping_event)
                 self.customer_app_event_producer.publish_billing_event(billing_event)
                 self.billing_event_producer.publish(billing_event)
                 xprint("Shopping event processed, Billing events sent")
@@ -119,6 +120,7 @@ class BillingEventProducer:
             pika.ConnectionParameters('localhost'))
         self.channel = self.connection.channel()
         self.channel.queue_declare(queue='billing_events')
+        self.channel.queue_bind(exchange='', queue='billing_events')
         xprint("BillingEventProducer {}: initialize_rabbitmq() called".format(self.worker_id))
 
     def publish(self, billing_event):
