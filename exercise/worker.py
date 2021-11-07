@@ -35,9 +35,7 @@ class ShoppingWorker:
             durable=True)
         self.channel.queue_declare(queue=self.queue, durable=True)
         self.channel.queue_bind(exchange='shopping_events_exchange', queue=self.queue, routing_key=self.weight)
-        
-#        self.channel.queue_declare(queue='shopping_events_dead_letter_queue', durable=True)
-#        self.channel.queue_bind(exchange='', queue='shopping_events_dead_letter_queue')
+        self.channel.queue_declare(queue='billing_events', durable=True)
 
         self.billing_event_producer = BillingEventProducer(self.connection, self.worker_id)
         self.customer_app_event_producer = CustomerEventProducer(self.connection, self.worker_id)
@@ -51,6 +49,11 @@ class ShoppingWorker:
         shopping_event = ProductEvent(event['event_type'], event['product_number'], event['timestamp'])
         customer_id = self.get_customer_id_from_shopping_event(shopping_event)
         if customer_id == None:
+            new_channel = self.connection.channel()
+            new_channel.queue_declare(queue='shopping_events_dead_letter_queue', durable=True)
+            new_channel.basic_publish(exchange='', 
+                routing_key='shopping_events_dead_letter_queue', 
+                body=body)
             self.channel.basic_reject(delivery_tag = method.delivery_tag, requeue=False)
         else:
 
@@ -119,8 +122,7 @@ class BillingEventProducer:
         self.connection = pika.BlockingConnection(
             pika.ConnectionParameters('localhost'))
         self.channel = self.connection.channel()
-        self.channel.queue_declare(queue='billing_events')
-        self.channel.queue_bind(exchange='', queue='billing_events')
+        self.channel.queue_declare(queue='billing_events', durable=True)
         xprint("BillingEventProducer {}: initialize_rabbitmq() called".format(self.worker_id))
 
     def publish(self, billing_event):

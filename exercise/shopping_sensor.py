@@ -28,10 +28,7 @@ class ShoppingEventProducer:
         #for q in ["q1", "q2"]:
         #    self.channel.queue_declare(queue=q, durable=True)
         #    self.channel.queue_bind(exchange='shopping_events_exchange', queue=q, routing_key="1")
-#        self.channel.queue_declare(queue='shopping_events_dead_letter_queue', durable=True)
-#        self.channel.queue_bind(exchange='', queue='shopping_events_dead_letter_queue')
-
-            
+        
         xprint("ShoppingEventProducer initialize_rabbitmq() finished")
 
     def publish(self, shopping_event):
