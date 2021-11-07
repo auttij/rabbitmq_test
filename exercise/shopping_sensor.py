@@ -4,6 +4,7 @@ import pika
 
 from xprint import xprint
 
+
 class ShoppingEventProducer:
 
     def __init__(self):
@@ -34,7 +35,7 @@ class ShoppingEventProducer:
         message = json.dumps(se)
         self.channel.basic_publish(
             exchange='shopping_events_exchange', 
-            routing_key=str(se['customer_id']), 
+            routing_key=str(se['product_number']), 
             body=message)
         # To implement - publish a message to the Rabbitmq here
         # Use json.dumps(vars(shopping_event)) to convert the shopping_event object to JSON
